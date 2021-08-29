@@ -1,0 +1,17 @@
+name: Docker Image
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag ghcr.io/hugomd/bridgeaddr:${GITHUB_SHA:0:8}
+    - name: Push docker image
+      env:
+        CR_PAT: ${{ secrets.CR_PAT }}
+      run: |
+        docker login -u "${{ github.actor }}" -p $CR_PAT ghcr.io
+        docker push ghcr.io/hugomd/bridgeaddr:$(echo $GITHUB_SHA | head -c8)
