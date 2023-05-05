@@ -99,6 +99,9 @@ func WaitForZap(r_hash, domain string, zapReq nostr.Event) {
 }
 
 func makeZapNote(privateKey, publicKey string, invoice Invoice, zapReq nostr.Event) nostr.Event {
+	preimageBytes, _ := b64.StdEncoding.DecodeString("mz6helziX/IoMjo0ElR/LEziVvKSagGxTYOHVi5Aezs=")
+	preimageHex := hex.EncodeToString(preimageBytes)
+
 	event := nostr.Event{
 		PubKey:    publicKey,
 		CreatedAt: nostr.Timestamp(invoice.SettleDate),
@@ -108,7 +111,7 @@ func makeZapNote(privateKey, publicKey string, invoice Invoice, zapReq nostr.Eve
 			*zapReq.Tags.GetFirst([]string{"e"}),
 			nostr.Tag{"bolt11", invoice.PaymentRequest},
 			nostr.Tag{"description", invoice.Memo},
-			nostr.Tag{"preimage", invoice.PreImage},
+			nostr.Tag{"preimage", preimageHex},
 		},
 	}
 
