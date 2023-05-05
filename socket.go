@@ -71,25 +71,30 @@ func WaitForZap(r_hash, domain string, zapReq nostr.Event) {
 			break
 		}
 		fmt.Println(response)
-		if response.Result.State == "SETTLED" {
-			zapNote := makeZapNote(privateKey, publicKey, response.Result, zapReq)
-			fmt.Println(zapNote)
+		go func() {
+			if response.Result.State == "SETTLED" {
+				zapNote := makeZapNote(privateKey, publicKey, response.Result, zapReq)
+				fmt.Println(zapNote)
 
-			relays := zapReq.Tags.GetAll([]string{"relays"})[0]
+				relays := zapReq.Tags.GetAll([]string{"relays"})[0]
 
-			for _, url := range relays[1:] {
-				log.Info().Str("relay", url).Msg("Connecting to relay")
-				relay, err := nostr.RelayConnect(context.Background(), url)
-				if err != nil {
-					log.Info().Err(err).Msg("Failed to connect to relay")
-					continue
-				}
-				if _, err := relay.Publish(context.Background(), zapNote); err != nil {
-					log.Info().Err(err).Msg("Failed to publish event to relay")
-					continue
+				for _, url := range relays[1:] {
+					go func() {
+						log.Info().Str("relay", url).Msg("Connecting to relay")
+						relay, err := nostr.RelayConnect(context.Background(), url)
+						if err != nil {
+							log.Info().Err(err).Msg("Failed to connect to relay")
+							return
+						}
+						if _, err := relay.Publish(context.Background(), zapNote); err != nil {
+							log.Info().Err(err).Msg("Failed to publish event to relay")
+							return
+						}
+						log.Info().Str("relay", url).Str("ID", zapNote.GetID()).Msg("Published to relay")
+					}()
 				}
 			}
-		}
+		}()
 	}
 }
 
