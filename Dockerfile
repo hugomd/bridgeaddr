@@ -1,4 +1,4 @@
-FROM golang:1.17-alpine AS build
+FROM golang:1.20-alpine AS build
 ENV GO111MODULE=on
 WORKDIR /go/src/github.com/fiatjaf/bridgeaddr/
 COPY . /go/src/github.com/fiatjaf/bridgeaddr/
