@@ -31,7 +31,7 @@ func makeMetadata(username, domain string) string {
 	return metadata
 }
 
-func makeInvoice(username, domain string, msat int, nostr string) (bolt11 string, err error) {
+func makeInvoice(username, domain string, msat int, zapReq string) (bolt11 string, err error) {
 	// grab all the necessary data from DNS
 	var (
 		kind        string
@@ -55,8 +55,8 @@ func makeInvoice(username, domain string, msat int, nostr string) (bolt11 string
 		host = v[0]
 	}
 
-	if nostr != "" {
-		description = nostr
+	if zapReq != "" {
+		description = zapReq
 	} else {
 		description = makeMetadata(username, domain)
 	}

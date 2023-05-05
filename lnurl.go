@@ -78,7 +78,7 @@ func handleLNURL(w http.ResponseWriter, r *http.Request) {
 
 		log.Info().Interface("zap request", zapReq).Msg("Parsed zap request")
 
-		bolt11, err := makeInvoice(username, domain, msat, zapReqStr)
+		bolt11, err := makeInvoice(username, domain, msat, zapReq.String())
 		if err != nil {
 			json.NewEncoder(w).Encode(
 				lnurl.ErrorResponse("failed to create invoice: " + err.Error()))
