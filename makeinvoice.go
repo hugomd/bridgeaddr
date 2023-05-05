@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/sha256"
 	"errors"
 	"net"
 	"strconv"
@@ -28,19 +27,21 @@ func makeMetadata(username, domain string) string {
 			metadata, _ = sjson.Set(metadata, "2.1", b64)
 		}
 	}
+
 	return metadata
 }
 
-func makeInvoice(username, domain string, msat int) (bolt11 string, err error) {
+func makeInvoice(username, domain string, msat int, nostr string) (bolt11 string, err error) {
 	// grab all the necessary data from DNS
 	var (
-		kind     string
-		cert     string
-		host     string
-		key      string
-		macaroon string
-		pak      string
-		waki     string
+		kind        string
+		cert        string
+		host        string
+		key         string
+		macaroon    string
+		pak         string
+		waki        string
+		description string
 	)
 	if v, err := net.LookupTXT("_kind." + domain); err == nil && len(v) > 0 {
 		kind = v[0]
@@ -53,8 +54,12 @@ func makeInvoice(username, domain string, msat int) (bolt11 string, err error) {
 	if v, err := net.LookupTXT("_host." + domain); err == nil && len(v) > 0 {
 		host = v[0]
 	}
-	// description_hash
-	h := sha256.Sum256([]byte(makeMetadata(username, domain)))
+
+	if nostr != "" {
+		description = nostr
+	} else {
+		description = makeMetadata(username, domain)
+	}
 
 	// prepare params
 	var backend makeinvoice.BackendParams
@@ -111,9 +116,10 @@ func makeInvoice(username, domain string, msat int) (bolt11 string, err error) {
 
 	// actually generate the invoice
 	return makeinvoice.MakeInvoice(makeinvoice.Params{
-		Msatoshi:        int64(msat),
-		DescriptionHash: h[:],
-		Backend:         backend,
+		Msatoshi:           int64(msat),
+		UseDescriptionHash: true,
+		Description:        description,
+		Backend:            backend,
 
 		Label: "bridgeaddr/" + strconv.FormatInt(time.Now().Unix(), 16),
 	})
